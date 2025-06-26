@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  password  String?
+  konnectWalletId String?
+  konnectOrganisationId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+
+  @@map("users")
+}
+
+model Profile {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  collectionId String? @unique
+  collectionAlias String? @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Notification preferences
+  notifyOnPayment      Boolean @default(true)
+  notifyOnLinkOpening  Boolean @default(false)
+  notifyMarketing      Boolean @default(false)
+
+  links Link[]
+
+  @@map("profiles")
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  title     String
+  price     Float
+  shareCode String   @unique
+  isActive  Boolean  @default(true)
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contents Content[]
+  purchases Purchase[]
+  views LinkView[]
+
+  @@map("links")
+}
+
+model Content {
+  id    String @id @default(cuid())
+  title String
+  linkId String
+  link   Link    @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  files File[]
+
+  @@map("contents")
+}
+
+model File {
+  id        String  @id @default(cuid())
+  filename  String
+  filepath  String
+  blurHash  String? // BlurHash string for protected preview
+  mimetype  String
+  size      Int
+  width     Int? // Image width in pixels
+  height    Int? // Image height in pixels
+  contentId String
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("files")
+}
+
+model Purchase {
+  id         String   @id @default(cuid())
+  linkId      String
+  link        Link      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  buyerEmail String?
+  paid       Boolean  @default(false)
+  paymentId  String?  // Konnect payment ID
+  paymentStatus String? // pending, completed, failed
+  konnectPaymentUrl String? // URL to redirect user to Konnect
+  createdAt  DateTime @default(now())
+
+  @@map("purchases")
+}
+
+model LinkView {
+  id        String   @id @default(cuid())
+  linkId    String
+  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  ip        String
+  userAgent String?
+  country   String?
+  city      String?
+  createdAt DateTime @default(now())
+
+  @@map("link_views")
+}
