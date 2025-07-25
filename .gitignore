@@ -1,4 +1,30 @@
+# dependencies
 /node_modules
+.pnp
+.pnp.js
+
+# next.js
 /.next/
-.env
+/out/
+
+# production
+/build
+
+# env & secrets
+.env*
+!.env.example
+
+# database
+*.db
+*.db-journal
+/prisma/*.db
+
+# user uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# misc
 .DS_Store
+*.pem
+npm-debug.log*
+.vscode/
