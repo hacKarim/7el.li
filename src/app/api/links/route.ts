@@ -105,6 +105,13 @@ export async function POST(request: NextRequest) {
 
     const { title, price, shareCode } = body
 
+    if (!price || !shareCode) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 },
+      )
+    }
+
     const userId = (session.user as SessionUser).id
 
     let profile = await prisma.profile.findUnique({
