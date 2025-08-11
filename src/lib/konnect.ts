@@ -579,6 +579,7 @@ export class KonnectService {
 
       const data: KonnectBankAccountStatusResponse = await response.json()
 
+      // Return the first bank account if any exist, or null if array is empty
       return data.bankdetails && data.bankdetails.length > 0
         ? data.bankdetails[0]
         : null
@@ -616,6 +617,7 @@ export class KonnectService {
 
       const data: KonnectBankAccountStatusResponse = await response.json()
 
+      // Return all bank accounts
       return data.bankdetails || []
     } catch (error) {
       console.error('Error fetching all Konnect bank accounts:', error)
@@ -629,6 +631,7 @@ export class KonnectService {
     amount: number,
   ): Promise<KonnectCashoutResponse> {
     try {
+      // Convert amount from dinars to millimes (multiply by 1000)
       const amountInMillimes = amount * 1000
 
       const accessToken = await this.login()
@@ -658,6 +661,8 @@ export class KonnectService {
       try {
         const parsedResponse = JSON.parse(responseText)
 
+        // Konnect API returns transaction details on success, not a success boolean
+        // Check if we have a transaction object with an ID to determine success
         if (parsedResponse.transaction && parsedResponse.transaction.id) {
           data = {
             success: true,
@@ -671,6 +676,7 @@ export class KonnectService {
           }
         }
       } catch {
+        // If response is not JSON but status was OK, assume success
         data = { success: true, message: 'Cashout initiated successfully' }
       }
 
@@ -705,6 +711,7 @@ export class KonnectService {
 
       const data: KonnectOrganizationsResponse = await response.json()
 
+      // Find the organization by ID
       const targetOrganization = data.organisations?.find(
         (org) => org.id === organizationId,
       )
@@ -766,6 +773,7 @@ export const konnectService = {
     return _konnectService
   },
 
+  // Proxy all methods to the instance
   initPayment: (paymentData: KonnectInitPaymentRequest) =>
     konnectService.instance.initPayment(paymentData),
   getPaymentDetails: (paymentId: string) =>
