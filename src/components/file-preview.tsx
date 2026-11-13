@@ -136,6 +136,9 @@ export function FilePreview({
         height={height}
         className={`w-full object-cover rounded ${className}`}
         style={{ height: `${height}px` }}
+        // Loaded straight from /api/files so the request carries the
+        // viewer's cookies; the image optimizer would fetch it without.
+        unoptimized
       />
     )
   }

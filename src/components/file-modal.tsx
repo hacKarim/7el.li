@@ -34,6 +34,9 @@ export function FileModal({ file, open, onClose }: FileModalProps) {
             height={600}
             className="max-w-full max-h-full object-contain rounded-lg"
             style={{ width: 'auto', height: 'auto' }}
+            // Loaded straight from /api/files so the request carries the
+            // viewer's cookies; the image optimizer would fetch it without.
+            unoptimized
           />
         </div>
       )

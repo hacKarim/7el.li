@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { findCallerPurchase } from '@/lib/purchase-access'
 
 export async function GET(
   request: NextRequest,
@@ -29,29 +30,10 @@ export async function GET(
       )
     }
 
-    const sessionId =
-      request.cookies.get('session-id')?.value ||
-      request.headers.get('x-session-id') ||
-      `anonymous-${Date.now()}-${Math.random()}`
-
-    const purchase = await prisma.purchase.findFirst({
-      where: {
-        linkId: link.id,
-        OR: [
-          { id: sessionId },
-          {
-            buyerEmail: request.nextUrl.searchParams.get('email') || undefined,
-          },
-        ],
-      },
-    })
-
-    // Check for token parameter
-    const token = request.nextUrl.searchParams.get('token')
-
-    // Validate if token matches a paid purchase ID
-    const hasValidToken =
-      token && purchase && purchase.id === token && purchase.paid
+    // The caller is only a buyer if they hold the id of a purchase of this
+    // link (cookie, header or token). An email address proves nothing.
+    const purchase = await findCallerPurchase(request, link.id)
+    const hasPaid = purchase?.paid === true
 
     // Filter files to conditionally include filepath and filename
     const linkWithFilteredFiles = {
@@ -59,7 +41,7 @@ export async function GET(
       contents: link.contents.map((content) => ({
         ...content,
         files: content.files.map((file) => {
-          if (hasValidToken) {
+          if (hasPaid) {
             return file
           } else {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars

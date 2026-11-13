@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { konnectService } from '@/lib/konnect'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,11 +17,19 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    if (!walletId) {
-      return NextResponse.json(
-        { error: 'Wallet ID is required' },
-        { status: 400 },
-      )
+    // The wallet is always the caller's own. The query parameter is accepted
+    // for backwards compatibility but can never select someone else's wallet.
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { konnectWalletId: true },
+    })
+
+    if (!user?.konnectWalletId) {
+      return NextResponse.json({ error: 'Wallet not found' }, { status: 404 })
+    }
+
+    if (walletId && walletId !== user.konnectWalletId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Validate pagination parameters
@@ -32,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     const transactionsData = await konnectService.getTransactionsForWallet(
-      walletId,
+      user.konnectWalletId,
       page,
       limit,
     )

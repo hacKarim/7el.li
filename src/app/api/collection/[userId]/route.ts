@@ -20,7 +20,6 @@ export async function GET(
       include: {
         user: {
           select: {
-            email: true,
             name: true,
           },
         },
@@ -75,9 +74,7 @@ export async function GET(
 
     return NextResponse.json({
       user: {
-        name:
-          profile.user.name || profile.user.email?.split('@')[0] || 'Anonymous',
-        email: profile.user.email,
+        name: profile.user.name || 'Anonymous',
       },
       links: publicLinks,
       totalLinks: publicLinks.length,

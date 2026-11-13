@@ -31,7 +31,6 @@ interface PublicLink {
 interface CollectionData {
   user: {
     name: string
-    email: string
   }
   links: PublicLink[]
   totalLinks: number
